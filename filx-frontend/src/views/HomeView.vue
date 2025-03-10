@@ -191,6 +191,7 @@ async function sendSelectedFile() {
         <button @click="copyOffer" class="bg-amber-200 p-1 rounded">
           Copy offer: {{ offerIsFinished ? "Offer ready" : "Making offer..." }}
         </button>
+        <div class="border-t-2 rounded border-slate-400 my-4"></div>
         <p>
           Or respond to a offer you've recieved by pasting it in here and
           copying the answer:
