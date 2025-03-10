@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useFileDialog } from "@vueuse/core";
 import { ref, type Ref } from "vue";
+import ProgressBar from "@/components/ProgressBar.vue";
 
 const configuration = {
   iceServers: [{ urls: "stun:freestun.net:3478" }],
@@ -86,8 +87,7 @@ async function connectWithRemoteAnswer() {
   );
 }
 
-const recievedFileMeta: Ref<any> =
-  ref(undefined);
+const recievedFileMeta: Ref<any> = ref(undefined);
 
 let receiveBuffer: Array<Blob> = [];
 let receiveSize = 0;
@@ -105,27 +105,22 @@ async function handleMessage(event: MessageEvent) {
       return console.log("received message without filemeta", event.data);
     receiveBuffer.push(event.data);
     receiveSize += (event.data as ArrayBuffer).byteLength;
-    console.log(`size`, receiveSize, 'of', recievedFileMeta.value);
+    console.log(`size`, receiveSize, "of", recievedFileMeta.value);
     if (receiveSize >= recievedFileMeta.value.size) {
-      if (receiveSize > recievedFileMeta.value.size) console.log("size is bigger????");
+      if (receiveSize > recievedFileMeta.value.size)
+        console.log("size is bigger????");
       const received = new Blob(receiveBuffer);
       receiveBuffer = [];
       URL.createObjectURL(received);
       let blobUrl = URL.createObjectURL(received);
       let a = document.createElement("a");
       a.href = blobUrl;
-      a.download = recievedFileMeta.value.name
+      a.download = recievedFileMeta.value.name;
       a.click();
       URL.revokeObjectURL(blobUrl);
       console.log("Done 🏁");
     }
   }
-}
-
-async function sendMessage() {
-  const payload = `${Math.random()}`;
-  console.log("Sending Message:", payload);
-  dataChannel.send(payload);
 }
 
 const { files, open, reset, onCancel, onChange } = useFileDialog({
@@ -145,6 +140,8 @@ onCancel(() => {
   /** do something on cancel */
 });
 
+const sendingPercentage: Ref<undefined|number> = ref(undefined);
+
 async function sendSelectedFile() {
   if (!selectedFile.value) return;
   const file = selectedFile.value;
@@ -163,39 +160,51 @@ async function sendSelectedFile() {
 
   dataChannel.addEventListener("bufferedamountlow", bufferedAmountLow);
 
-  function bufferedAmountLow() {
-    console.log("Sent data (Blob)", sliceStart, sliceSize);
+  bufferedAmountLow();
+
+  function bufferedAmountLow(event?: any) {
+    console.log("Sent data (Blob)", sliceStart, sliceSize, event);
     dataChannel.send(file.slice(sliceStart, (sliceStart += sliceSize)));
-    if (sliceStart > file.size)
+    sendingPercentage.value = sliceStart/file.size;
+    if (sliceStart > file.size) {
       dataChannel.removeEventListener("bufferedamountlow", bufferedAmountLow);
+      sendingPercentage.value = undefined;
+    }
   }
 }
 </script>
 
 <template>
-  <main v-if="!isConnected">
-    <p>Trying out WebRTC.</p>
-    <button @click="copyOffer" class="bg-amber-200 p-1 rounded">
-      Copy offer: {{ offerIsFinished ? "Offer ready" : "Making offer..." }}
-    </button>
+  <div
+    class="h-[100svh] grid place-items-center w-full *:bg-slate-50 *:shadow *:w-96 *:p-8 *:flex *:flex-col *:gap-4"
+  >
+    <main v-if="!isConnected">
+      <h1 class="font-bold text-2xl">WebRTC Demo</h1>
+      <button @click="copyOffer" class="bg-amber-200 p-1 rounded">
+        Copy offer: {{ offerIsFinished ? "Offer ready" : "Making offer..." }}
+      </button>
 
-    <br />
-    <textarea v-model="remoteOfferInput"></textarea>
-    <button @click="respondToRemoteOffer">Copy answer</button>
-    <br />
-    <textarea v-model="remoteAnswerInput"></textarea>
-    <button @click="connectWithRemoteAnswer">Connect to answer</button>
-    <br />
-    <button @click="sendMessage">Send hello message</button>
-
-    <!-- <code>{{ peerConnection.localDescription?.sdp }}</code> -->
-  </main>
-  <main v-else>
-    <h1>Connected 📱</h1>
-    <button @click="open()">Select file</button>
-    <p v-if="selectedFile">{{ selectedFile.name }}</p>
-    <button v-if="selectedFile" @click="sendSelectedFile">
-      Send this file
-    </button>
-  </main>
+      <br />
+      <textarea v-model="remoteOfferInput"></textarea>
+      <button @click="respondToRemoteOffer">Copy answer</button>
+      <br />
+      <textarea v-model="remoteAnswerInput"></textarea>
+      <button @click="connectWithRemoteAnswer">Connect to answer</button>
+    </main>
+    <main v-else>
+      <h1 class="font-bold text-2xl">WebRTC: Connected 📱</h1>
+      <button class="p-2 bg-amber-200 rounded" @click="open()">
+        Select file to send
+      </button>
+      <button
+        v-if="selectedFile"
+        class="items-center flex gap-2 p-2 bg-amber-200 rounded break-all"
+        @click="sendSelectedFile"
+      >
+        Send {{ selectedFile.name }}
+        <i class="icon-[heroicons--paper-airplane] size-10"></i>
+      </button>
+      <ProgressBar v-if="sendingPercentage" :value="sendingPercentage * 100"></ProgressBar>
+    </main>
+  </div>
 </template>
