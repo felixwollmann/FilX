@@ -236,7 +236,9 @@ async function sendSelectedFile() {
         class="items-center flex gap-2 p-2 bg-amber-200 rounded break-all"
         @click="sendSelectedFile"
       >
+      <span class="grow">
         Send {{ selectedFile.name }}
+      </span>
         <i class="icon-[heroicons--paper-airplane] size-10"></i>
       </button>
       <ProgressBar
