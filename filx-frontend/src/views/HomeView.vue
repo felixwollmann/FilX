@@ -51,8 +51,12 @@ peerConnection.addEventListener("icegatheringstatechange", (event) => {
 
 console.log("offer:", offer);
 
+const offerWasCopied = ref(false);
+const answerWasCopied = ref(false);
+
 function copyOffer() {
   console.log("copying offer");
+  offerWasCopied.value = true;
   window.navigator.clipboard.writeText(
     JSON.stringify(peerConnection.localDescription?.toJSON())
   );
@@ -74,8 +78,8 @@ async function respondToRemoteOffer() {
   window.navigator.clipboard.writeText(
     JSON.stringify(peerConnection.localDescription?.toJSON())
   );
+  answerWasCopied.value = true;
   peerConnection.addEventListener("datachannel", (event) => {
-    console.log("YAY 2");
     dataChannel = event.channel;
     dataChannel.addEventListener("message", handleMessage);
   });
@@ -140,7 +144,7 @@ onCancel(() => {
   /** do something on cancel */
 });
 
-const sendingPercentage: Ref<undefined|number> = ref(undefined);
+const sendingPercentage: Ref<undefined | number> = ref(undefined);
 
 async function sendSelectedFile() {
   if (!selectedFile.value) return;
@@ -165,7 +169,7 @@ async function sendSelectedFile() {
   function bufferedAmountLow(event?: any) {
     console.log("Sent data (Blob)", sliceStart, sliceSize, event);
     dataChannel.send(file.slice(sliceStart, (sliceStart += sliceSize)));
-    sendingPercentage.value = sliceStart/file.size;
+    sendingPercentage.value = sliceStart / file.size;
     if (sliceStart > file.size) {
       dataChannel.removeEventListener("bufferedamountlow", bufferedAmountLow);
       sendingPercentage.value = undefined;
@@ -178,18 +182,48 @@ async function sendSelectedFile() {
   <div
     class="h-[100svh] grid place-items-center w-full *:bg-slate-50 *:shadow *:w-96 *:p-8 *:flex *:flex-col *:gap-4"
   >
-    <main v-if="!isConnected">
+    <main v-if="!isConnected" class="">
       <h1 class="font-bold text-2xl">WebRTC Demo</h1>
-      <button @click="copyOffer" class="bg-amber-200 p-1 rounded">
-        Copy offer: {{ offerIsFinished ? "Offer ready" : "Making offer..." }}
-      </button>
 
-      <br />
-      <textarea v-model="remoteOfferInput"></textarea>
-      <button @click="respondToRemoteOffer">Copy answer</button>
-      <br />
-      <textarea v-model="remoteAnswerInput"></textarea>
-      <button @click="connectWithRemoteAnswer">Connect to answer</button>
+      <template v-if="!offerWasCopied && !answerWasCopied">
+        <p>Either copy a offer:</p>
+
+        <button @click="copyOffer" class="bg-amber-200 p-1 rounded">
+          Copy offer: {{ offerIsFinished ? "Offer ready" : "Making offer..." }}
+        </button>
+        <p>
+          Or respond to a offer you've recieved by pasting it in here and
+          copying the answer:
+        </p>
+
+        <textarea
+          v-model="remoteOfferInput"
+          class="border-slate-300 border-4 rounded"
+        ></textarea>
+        <button @click="respondToRemoteOffer" class="bg-amber-200 p-1 rounded">
+          Copy answer
+        </button>
+      </template>
+      <template v-else-if="answerWasCopied">
+        Now send the answer to your peer and paste it in. Once you're done, a
+        connection should be established.
+      </template>
+      <template v-else>
+        <p>
+          Now send the offer to your peer and paste the answer in here once
+          you've got it:
+        </p>
+        <textarea
+          v-model="remoteAnswerInput"
+          class="border-slate-300 border-4 rounded"
+        ></textarea>
+        <button
+          @click="connectWithRemoteAnswer"
+          class="bg-amber-200 p-1 rounded"
+        >
+          Connect to answer
+        </button>
+      </template>
     </main>
     <main v-else>
       <h1 class="font-bold text-2xl">WebRTC: Connected 📱</h1>
@@ -204,7 +238,10 @@ async function sendSelectedFile() {
         Send {{ selectedFile.name }}
         <i class="icon-[heroicons--paper-airplane] size-10"></i>
       </button>
-      <ProgressBar v-if="sendingPercentage" :value="sendingPercentage * 100"></ProgressBar>
+      <ProgressBar
+        v-if="sendingPercentage"
+        :value="sendingPercentage * 100"
+      ></ProgressBar>
     </main>
   </div>
 </template>
