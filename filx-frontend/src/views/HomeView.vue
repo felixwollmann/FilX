@@ -4,7 +4,10 @@ import { ref, type Ref } from "vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 
 const configuration = {
-  iceServers: [{ urls: "stun:freestun.net:3478" }],
+  iceServers: [
+    { urls: "stun:freestun.net:3478" },
+    { urls: "turn:freestun.net:3478", username: "free", credential: "free" },
+  ],
 };
 
 const peerConnection = new RTCPeerConnection(configuration);
@@ -236,9 +239,7 @@ async function sendSelectedFile() {
         class="items-center flex gap-2 p-2 bg-amber-200 rounded break-all"
         @click="sendSelectedFile"
       >
-      <span class="grow">
-        Send {{ selectedFile.name }}
-      </span>
+        <span class="grow"> Send {{ selectedFile.name }} </span>
         <i class="icon-[heroicons--paper-airplane] size-10"></i>
       </button>
       <ProgressBar
