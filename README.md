@@ -1,4 +1,4 @@
-# FilX
+# WebRTC file transfer
 A WebRTC file transfer proof of concept, created as part of a school project
 
 ## Notes
