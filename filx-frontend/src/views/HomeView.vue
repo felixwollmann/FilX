@@ -3,7 +3,7 @@ import { useFileDialog } from "@vueuse/core";
 import { ref, type Ref } from "vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 
-const configuration = {
+const configuration: RTCConfiguration = {
   iceServers: [
     { urls: "stun:freestun.net:3478" },
     { urls: "turn:freestun.net:3478", username: "free", credential: "free" },
