@@ -12,6 +12,8 @@ A WebRTC file transfer proof of concept, created as part of a school project
 - RFC8445 (ICE ... Interactive Connectivity Establishment): https://datatracker.ietf.org/doc/html/rfc8445
 
 ## Presentation Notes (in German 🇦🇹 as the presentation was held in German)
+- Feature-Demo
+  - verschicken einer Datei eben
 - WebRTC ... Web Real-Time Communications
   - gedacht für Peer-to-Peer verbindungen für zB Video-Anrufe
   - auch Datenübertragung möglich
@@ -34,9 +36,12 @@ A WebRTC file transfer proof of concept, created as part of a school project
   - ICE: Interactive Connectivity Establishment
     - beschreibt den ganzen Prozess
     - Arten von Kandidaten:
-    - host: Host (lokale IP-Adresse im zB Schulnetzwerk hi)
-    - prflex: Peer Reflexive ()
+    - host: Host (lokale IP-Adresse im zB Schulnetzwerk)
+    - prflex: Peer Reflexive (festgestellt durch STUN-anfragen zwischen den Clients)
     - srflx: Server Reflexive (Adresse außerhalb des NAT)
     - relay: TURN Server (eben über einen TURN-Server)
+  - <- *herzeigen des Beispiel-SDPs
 - nicht so weit verbreitete Technologie
   - <- *Devtools herzeigen*
+  - aber man kann durchaus nette Sachen damit bauen
+    - Signal-Videoanrufe
